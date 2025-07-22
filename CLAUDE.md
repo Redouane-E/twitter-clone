@@ -66,3 +66,6 @@ src/
 - Implemented full-width Twitter-like layout with proper sidebar structure
 - Added sticky headers and responsive design
 - Updated global CSS variables for consistent theming
+
+## Development Notes
+- Use context7 mcp server for any libraries that will be using before generating any code

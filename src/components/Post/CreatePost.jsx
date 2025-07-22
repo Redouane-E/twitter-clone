@@ -1,16 +1,22 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Image, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
-import { createImagePreview } from '../../utils/helpers';
+import { createImagePreview, findMentionAtCursor } from '../../utils/helpers';
+import MentionSuggestions from '../UI/MentionSuggestions';
 
 const CreatePost = () => {
   const [content, setContent] = useState('');
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionPosition, setMentionPosition] = useState({ x: 0, y: 0 });
+  const [currentMention, setCurrentMention] = useState(null);
   
   const { user } = useAuth();
   const { addPost } = usePosts();
+  const textareaRef = useRef();
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -26,6 +32,83 @@ const CreatePost = () => {
 
   const removeImage = () => {
     setImage(null);
+  };
+
+  const getCursorPosition = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return { x: 0, y: 0 };
+
+    const rect = textarea.getBoundingClientRect();
+    const cursorPosition = textarea.selectionStart;
+    
+    // Create a temporary div to measure text position
+    const tempDiv = document.createElement('div');
+    const styles = window.getComputedStyle(textarea);
+    tempDiv.style.font = styles.font;
+    tempDiv.style.padding = styles.padding;
+    tempDiv.style.whiteSpace = 'pre-wrap';
+    tempDiv.style.wordWrap = 'break-word';
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.width = styles.width;
+    tempDiv.style.height = 'auto';
+    
+    const textBeforeCursor = content.substring(0, cursorPosition);
+    tempDiv.textContent = textBeforeCursor;
+    
+    document.body.appendChild(tempDiv);
+    const tempRect = tempDiv.getBoundingClientRect();
+    document.body.removeChild(tempDiv);
+    
+    return {
+      x: rect.left + tempRect.width - rect.left,
+      y: rect.top + tempRect.height - rect.top
+    };
+  };
+
+  const handleContentChange = (e) => {
+    const newContent = e.target.value;
+    setContent(newContent);
+    
+    const cursorPosition = e.target.selectionStart;
+    const mention = findMentionAtCursor(newContent, cursorPosition);
+    
+    if (mention) {
+      setCurrentMention(mention);
+      setMentionQuery(mention.query);
+      setMentionPosition(getCursorPosition());
+      setShowMentions(true);
+    } else {
+      setShowMentions(false);
+      setCurrentMention(null);
+      setMentionQuery('');
+    }
+  };
+
+  const handleMentionSelect = (user) => {
+    if (!currentMention || !textareaRef.current) return;
+    
+    const beforeMention = content.substring(0, currentMention.startIndex);
+    const afterMention = content.substring(currentMention.endIndex);
+    const newContent = `${beforeMention}@${user.username} ${afterMention}`;
+    
+    setContent(newContent);
+    setShowMentions(false);
+    setCurrentMention(null);
+    setMentionQuery('');
+    
+    // Focus back to textarea and position cursor after the mention
+    setTimeout(() => {
+      const newCursorPosition = beforeMention.length + user.username.length + 2;
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
+  };
+
+  const handleMentionClose = () => {
+    setShowMentions(false);
+    setCurrentMention(null);
+    setMentionQuery('');
   };
 
   const handleSubmit = (e) => {
@@ -84,20 +167,31 @@ const CreatePost = () => {
           </div>
           
           <div className="flex-1">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="What's happening?"
-              className="textarea"
-              style={{
-                border: 'none',
-                padding: '12px 0',
-                fontSize: '20px',
-                minHeight: '120px',
-                resize: 'none'
-              }}
-              maxLength={280}
-            />
+            <div style={{ position: 'relative' }}>
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleContentChange}
+                placeholder="What's happening?"
+                className="textarea"
+                style={{
+                  border: 'none',
+                  padding: '12px 0',
+                  fontSize: '20px',
+                  minHeight: '120px',
+                  resize: 'none'
+                }}
+                maxLength={280}
+              />
+              
+              <MentionSuggestions
+                isOpen={showMentions}
+                query={mentionQuery}
+                position={mentionPosition}
+                onSelect={handleMentionSelect}
+                onClose={handleMentionClose}
+              />
+            </div>
 
             {image && (
               <div style={{ position: 'relative', marginBottom: '16px' }}>

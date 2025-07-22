@@ -1,7 +1,7 @@
 import { Heart, Repeat2, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
-import { formatRelativeTime } from '../../utils/helpers';
+import { formatRelativeTime, renderTextWithMentions } from '../../utils/helpers';
 
 const PostCard = ({ post }) => {
   const { user } = useAuth();
@@ -13,6 +13,45 @@ const PostCard = ({ post }) => {
 
   const handleRetweet = () => {
     toggleRetweet(post.id, user.id);
+  };
+
+  const handleMentionClick = (username) => {
+    // In a real app, this would navigate to the user's profile
+    console.log('Navigate to user profile:', username);
+  };
+
+  const renderContent = (text) => {
+    const parts = renderTextWithMentions(text);
+    
+    if (typeof parts === 'string') {
+      return parts;
+    }
+    
+    return parts.map((part, index) => {
+      if (typeof part === 'object' && part.type === 'mention') {
+        return (
+          <span
+            key={index}
+            onClick={() => handleMentionClick(part.username)}
+            style={{
+              color: 'var(--primary-color)',
+              cursor: 'pointer',
+              fontWeight: '500',
+              textDecoration: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.textDecoration = 'underline';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.textDecoration = 'none';
+            }}
+          >
+            {part.text}
+          </span>
+        );
+      }
+      return part;
+    });
   };
 
   return (
@@ -55,7 +94,7 @@ const PostCard = ({ post }) => {
           
           {post.content && (
             <p style={{ marginBottom: '12px', lineHeight: '1.5' }}>
-              {post.content}
+              {renderContent(post.content)}
             </p>
           )}
 

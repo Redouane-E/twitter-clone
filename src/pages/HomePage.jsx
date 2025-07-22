@@ -3,6 +3,7 @@ import CreatePost from '../components/Post/CreatePost';
 import Feed from '../components/Post/Feed';
 import ProfileHeader from '../components/Profile/ProfileHeader';
 import EditProfileModal from '../components/Profile/EditProfileModal';
+import ThemeToggle from '../components/UI/ThemeToggle';
 
 const HomePage = () => {
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -25,6 +26,7 @@ const HomePage = () => {
       <div className="main-content">
         <div className="header">
           <h1>Home</h1>
+          <ThemeToggle />
         </div>
         
         <div style={{ padding: '0 20px' }}>

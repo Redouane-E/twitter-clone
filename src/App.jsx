@@ -1,5 +1,6 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PostProvider } from './contexts/PostContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import './styles/globals.css';
@@ -32,11 +33,13 @@ const AppContent = () => {
 
 const App = () => {
   return (
-    <AuthProvider>
-      <PostProvider>
-        <AppContent />
-      </PostProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <PostProvider>
+          <AppContent />
+        </PostProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 };
 
