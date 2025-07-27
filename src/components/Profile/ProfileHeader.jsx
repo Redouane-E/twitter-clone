@@ -5,24 +5,23 @@ const ProfileHeader = ({ onEditProfile }) => {
   const { user, logout } = useAuth();
 
   return (
-    <div className="card">
-      <div className="flex items-center justify-between mb-3">
-        <h2 style={{ fontSize: '20px', fontWeight: '700' }}>Profile</h2>
+    <div className="card hover-lift">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="gradient-text" style={{ fontSize: '22px', fontWeight: '800' }}>Profile</h2>
         <div className="flex gap-2">
           <button
             onClick={onEditProfile}
-            className="btn btn-secondary btn-small"
+            className="btn btn-ghost btn-small"
           >
             <Edit size={16} />
             Edit
           </button>
           <button
             onClick={logout}
-            className="btn btn-secondary btn-small"
-            style={{ color: 'var(--danger-color)', borderColor: 'var(--danger-color)' }}
+            className="btn btn-ghost btn-small glow-danger"
+            style={{ color: 'var(--danger-color)' }}
           >
             <LogOut size={16} />
-            Logout
           </button>
         </div>
       </div>
@@ -33,19 +32,19 @@ const ProfileHeader = ({ onEditProfile }) => {
             <img
               src={user.avatar}
               alt={user.displayName}
-              className="avatar avatar-lg"
+              className="avatar avatar-lg avatar-premium status-online"
             />
           ) : (
             <div 
-              className="avatar avatar-lg"
+              className="avatar avatar-lg avatar-premium status-online"
               style={{
-                backgroundColor: 'var(--primary-color)',
+                background: 'var(--primary-gradient)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: 'white',
-                fontSize: '24px',
-                fontWeight: '600'
+                fontSize: '28px',
+                fontWeight: '700'
               }}
             >
               {user.displayName.charAt(0).toUpperCase()}

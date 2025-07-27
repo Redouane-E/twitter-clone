@@ -1,23 +1,22 @@
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePosts } from '../../contexts/PostContext';
 import PostCard from './PostCard';
+import PostSkeleton from '../UI/PostSkeleton';
 
 const Feed = () => {
   const { posts, isLoading } = usePosts();
 
   if (isLoading) {
     return (
-      <div className="text-center" style={{ padding: '40px' }}>
-        <div style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid var(--border-color)',
-          borderTop: '3px solid var(--primary-color)',
-          borderRadius: '50%',
-          margin: '0 auto',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <p className="text-secondary mt-2">Loading posts...</p>
-      </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {[...Array(3)].map((_, index) => (
+          <PostSkeleton key={index} />
+        ))}
+      </motion.div>
     );
   }
 
@@ -35,11 +34,29 @@ const Feed = () => {
   }
 
   return (
-    <div>
-      {posts.map(post => (
-        <PostCard key={post.id} post={post} />
-      ))}
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      <AnimatePresence>
+        {posts.map((post, index) => (
+          <motion.div
+            key={post.id}
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ 
+              duration: 0.4, 
+              delay: index * 0.1,
+              ease: "easeOut" 
+            }}
+          >
+            <PostCard post={post} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

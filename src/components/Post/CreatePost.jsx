@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Image, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
@@ -168,7 +169,7 @@ const CreatePost = () => {
           
           <div className="flex-1">
             <div style={{ position: 'relative' }}>
-              <textarea
+              <motion.textarea
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
@@ -182,6 +183,10 @@ const CreatePost = () => {
                   resize: 'none'
                 }}
                 maxLength={280}
+                animate={{
+                  height: content.length > 100 ? '160px' : '120px'
+                }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               />
               
               <MentionSuggestions
@@ -193,42 +198,52 @@ const CreatePost = () => {
               />
             </div>
 
-            {image && (
-              <div style={{ position: 'relative', marginBottom: '16px' }}>
-                <img
-                  src={image}
-                  alt="Upload preview"
-                  style={{
-                    width: '100%',
-                    maxHeight: '400px',
-                    objectFit: 'cover',
-                    borderRadius: 'var(--border-radius)',
-                    border: '1px solid var(--border-color)'
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '8px',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '32px',
-                    height: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer'
-                  }}
+            <AnimatePresence>
+              {image && (
+                <motion.div 
+                  style={{ position: 'relative', marginBottom: '16px' }}
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
+                  <img
+                    src={image}
+                    alt="Upload preview"
+                    style={{
+                      width: '100%',
+                      maxHeight: '400px',
+                      objectFit: 'cover',
+                      borderRadius: 'var(--border-radius)',
+                      border: '1px solid var(--border-color)'
+                    }}
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={removeImage}
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X size={16} />
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="flex items-center justify-between">
               <div>
@@ -260,15 +275,20 @@ const CreatePost = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <span 
+                <motion.span 
                   className="text-small"
                   style={{
                     color: remainingChars < 20 ? 'var(--danger-color)' : 'var(--text-secondary)'
                   }}
+                  animate={{
+                    scale: remainingChars < 20 ? [1, 1.2, 1] : 1,
+                    color: remainingChars < 0 ? 'var(--danger-color)' : remainingChars < 20 ? 'var(--warning-color)' : 'var(--text-secondary)'
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
                   {remainingChars}
-                </span>
-                <button
+                </motion.span>
+                <motion.button
                   type="submit"
                   disabled={!canPost || isLoading}
                   className="btn btn-primary btn-small"
@@ -276,9 +296,15 @@ const CreatePost = () => {
                     opacity: canPost ? 1 : 0.5,
                     cursor: canPost ? 'pointer' : 'not-allowed'
                   }}
+                  whileHover={canPost ? { scale: 1.05 } : {}}
+                  whileTap={canPost ? { scale: 0.95 } : {}}
+                  animate={{
+                    opacity: canPost ? 1 : 0.5
+                  }}
+                  transition={{ duration: 0.2 }}
                 >
                   {isLoading ? 'Posting...' : 'Post'}
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>

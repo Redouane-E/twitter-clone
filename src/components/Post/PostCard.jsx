@@ -1,4 +1,5 @@
 import { Heart, Repeat2, MessageCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
 import { formatRelativeTime, renderTextWithMentions } from '../../utils/helpers';
@@ -55,7 +56,12 @@ const PostCard = ({ post }) => {
   };
 
   return (
-    <div className="card" style={{ paddingBottom: '12px' }}>
+    <motion.div 
+      className="card" 
+      style={{ paddingBottom: '12px' }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2 }}
+    >
       <div className="flex gap-3">
         <div>
           {post.author.avatar ? (
@@ -115,7 +121,7 @@ const PostCard = ({ post }) => {
           )}
 
           <div className="flex items-center justify-between" style={{ maxWidth: '300px' }}>
-            <button
+            <motion.button
               style={{
                 background: 'none',
                 border: 'none',
@@ -128,6 +134,12 @@ const PostCard = ({ post }) => {
                 color: 'var(--text-secondary)',
                 transition: 'var(--transition)'
               }}
+              whileHover={{ 
+                backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                color: 'var(--primary-color)',
+                scale: 1.1
+              }}
+              whileTap={{ scale: 0.95 }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
                 e.currentTarget.style.color = 'var(--primary-color)';
@@ -139,9 +151,9 @@ const PostCard = ({ post }) => {
             >
               <MessageCircle size={18} />
               <span className="text-small">0</span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={handleRetweet}
               style={{
                 background: 'none',
@@ -155,6 +167,12 @@ const PostCard = ({ post }) => {
                 color: post.retweeted ? 'var(--success-color)' : 'var(--text-secondary)',
                 transition: 'var(--transition)'
               }}
+              whileHover={{ 
+                backgroundColor: 'rgba(0, 186, 124, 0.1)',
+                color: 'var(--success-color)',
+                scale: 1.1
+              }}
+              whileTap={{ scale: 0.95 }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(0, 186, 124, 0.1)';
                 e.currentTarget.style.color = 'var(--success-color)';
@@ -164,11 +182,16 @@ const PostCard = ({ post }) => {
                 e.currentTarget.style.color = post.retweeted ? 'var(--success-color)' : 'var(--text-secondary)';
               }}
             >
-              <Repeat2 size={18} />
+              <motion.div
+                animate={post.retweeted ? { rotate: [0, 180, 360] } : { rotate: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+              >
+                <Repeat2 size={18} />
+              </motion.div>
               <span className="text-small">{post.retweets}</span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={handleLike}
               style={{
                 background: 'none',
@@ -182,6 +205,12 @@ const PostCard = ({ post }) => {
                 color: post.liked ? 'var(--danger-color)' : 'var(--text-secondary)',
                 transition: 'var(--transition)'
               }}
+              whileHover={{ 
+                backgroundColor: 'rgba(244, 33, 46, 0.1)',
+                color: 'var(--danger-color)',
+                scale: 1.1
+              }}
+              whileTap={{ scale: 0.95 }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(244, 33, 46, 0.1)';
                 e.currentTarget.style.color = 'var(--danger-color)';
@@ -191,13 +220,18 @@ const PostCard = ({ post }) => {
                 e.currentTarget.style.color = post.liked ? 'var(--danger-color)' : 'var(--text-secondary)';
               }}
             >
-              <Heart size={18} fill={post.liked ? 'currentColor' : 'none'} />
+              <motion.div
+                animate={post.liked ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+              >
+                <Heart size={18} fill={post.liked ? 'currentColor' : 'none'} />
+              </motion.div>
               <span className="text-small">{post.likes}</span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
