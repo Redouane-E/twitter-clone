@@ -1,12 +1,15 @@
-import { Heart, Repeat2, MessageCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { Heart, Repeat2, MessageCircle, BarChart3 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
 import { formatRelativeTime, renderTextWithMentions } from '../../utils/helpers';
+import QuoteTweetModal from './QuoteTweetModal';
 
 const PostCard = ({ post }) => {
   const { user } = useAuth();
   const { toggleLike, toggleRetweet } = usePosts();
+  const [showQuoteTweetModal, setShowQuoteTweetModal] = useState(false);
 
   const handleLike = () => {
     toggleLike(post.id, user.id);
@@ -14,6 +17,12 @@ const PostCard = ({ post }) => {
 
   const handleRetweet = () => {
     toggleRetweet(post.id, user.id);
+  };
+
+  const handleQuoteTweet = () => {
+    // Prevent quoting quote tweets to avoid infinite chains
+    if (post.quotedPost) return;
+    setShowQuoteTweetModal(true);
   };
 
   const handleMentionClick = (username) => {
@@ -53,6 +62,83 @@ const PostCard = ({ post }) => {
       }
       return part;
     });
+  };
+
+  const renderEmbeddedPost = (quotedPost) => {
+    return (
+      <div 
+        style={{
+          border: '1px solid var(--border-color)',
+          borderRadius: 'var(--border-radius)',
+          padding: '12px',
+          marginTop: '12px',
+          backgroundColor: 'var(--background-secondary)'
+        }}
+      >
+        <div className="flex gap-2">
+          <div>
+            {quotedPost.author.avatar ? (
+              <img
+                src={quotedPost.author.avatar}
+                alt={quotedPost.author.displayName}
+                className="avatar"
+                style={{ width: '24px', height: '24px' }}
+              />
+            ) : (
+              <div 
+                className="avatar"
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  backgroundColor: 'var(--primary-color)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '12px',
+                  fontWeight: '600'
+                }}
+              >
+                {quotedPost.author.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+          
+          <div className="flex-1">
+            <div className="flex items-center gap-1 mb-1">
+              <h4 style={{ fontWeight: '600', fontSize: '14px' }}>{quotedPost.author.displayName}</h4>
+              <span className="text-secondary" style={{ fontSize: '12px' }}>@{quotedPost.author.username}</span>
+              <span className="text-secondary" style={{ fontSize: '12px' }}>·</span>
+              <span className="text-secondary" style={{ fontSize: '12px' }}>
+                {formatRelativeTime(quotedPost.timestamp)}
+              </span>
+            </div>
+            
+            {quotedPost.content && (
+              <p style={{ marginBottom: '8px', lineHeight: '1.4', fontSize: '14px' }}>
+                {renderContent(quotedPost.content)}
+              </p>
+            )}
+
+            {quotedPost.image && (
+              <div>
+                <img
+                  src={quotedPost.image}
+                  alt="Quoted post content"
+                  style={{
+                    width: '100%',
+                    maxHeight: '200px',
+                    objectFit: 'cover',
+                    borderRadius: 'var(--border-radius)',
+                    border: '1px solid var(--border-color)'
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -120,7 +206,9 @@ const PostCard = ({ post }) => {
             </div>
           )}
 
-          <div className="flex items-center justify-between" style={{ maxWidth: '300px' }}>
+          {post.quotedPost && renderEmbeddedPost(post.quotedPost)}
+
+          <div className="flex items-center justify-between" style={{ maxWidth: '400px' }}>
             <motion.button
               style={{
                 background: 'none',
@@ -192,6 +280,45 @@ const PostCard = ({ post }) => {
             </motion.button>
 
             <motion.button
+              onClick={handleQuoteTweet}
+              disabled={!!post.quotedPost}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: post.quotedPost ? 'not-allowed' : 'pointer',
+                padding: '8px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: 'var(--text-secondary)',
+                opacity: post.quotedPost ? 0.5 : 1,
+                transition: 'var(--transition)'
+              }}
+              whileHover={!post.quotedPost ? { 
+                backgroundColor: 'rgba(29, 161, 242, 0.1)',
+                color: 'var(--primary-color)',
+                scale: 1.1
+              } : {}}
+              whileTap={!post.quotedPost ? { scale: 0.95 } : {}}
+              onMouseEnter={(e) => {
+                if (!post.quotedPost) {
+                  e.currentTarget.style.backgroundColor = 'rgba(29, 161, 242, 0.1)';
+                  e.currentTarget.style.color = 'var(--primary-color)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!post.quotedPost) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }
+              }}
+            >
+              <BarChart3 size={18} />
+              <span className="text-small">{post.quotes || 0}</span>
+            </motion.button>
+
+            <motion.button
               onClick={handleLike}
               style={{
                 background: 'none',
@@ -231,6 +358,12 @@ const PostCard = ({ post }) => {
           </div>
         </div>
       </div>
+
+      <QuoteTweetModal
+        isOpen={showQuoteTweetModal}
+        onClose={() => setShowQuoteTweetModal(false)}
+        originalPost={post}
+      />
     </motion.div>
   );
 };

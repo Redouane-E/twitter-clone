@@ -15,6 +15,17 @@ const postReducer = (state, action) => {
         ...state,
         posts: [action.payload, ...state.posts]
       };
+    case 'ADD_QUOTE_TWEET': {
+      const { quoteTweet, originalPostId } = action.payload;
+      return {
+        ...state,
+        posts: [quoteTweet, ...state.posts.map(post =>
+          post.id === originalPostId
+            ? { ...post, quotes: (post.quotes || 0) + 1 }
+            : post
+        )]
+      };
+    }
     case 'TOGGLE_LIKE':
       return {
         ...state,
@@ -75,6 +86,7 @@ export const PostProvider = ({ children }) => {
       timestamp: new Date().toISOString(),
       likes: 0,
       retweets: 0,
+      quotes: 0,
       liked: false,
       retweeted: false
     };
@@ -82,6 +94,36 @@ export const PostProvider = ({ children }) => {
     const updatedPosts = [newPost, ...state.posts];
     localStorage.setItem('twitterPosts', JSON.stringify(updatedPosts));
     dispatch({ type: 'ADD_POST', payload: newPost });
+  };
+
+  const addQuoteTweet = (content, image, originalPost, user) => {
+    const quoteTweet = {
+      id: Date.now(),
+      content,
+      image,
+      quotedPost: originalPost,
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      retweets: 0,
+      quotes: 0,
+      liked: false,
+      retweeted: false,
+      author: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatar: user.avatar
+      }
+    };
+    
+    dispatch({ type: 'ADD_QUOTE_TWEET', payload: { quoteTweet, originalPostId: originalPost.id } });
+    
+    const updatedPosts = [quoteTweet, ...state.posts.map(post =>
+      post.id === originalPost.id
+        ? { ...post, quotes: (post.quotes || 0) + 1 }
+        : post
+    )];
+    localStorage.setItem('twitterPosts', JSON.stringify(updatedPosts));
   };
 
   const toggleLike = (postId, userId) => {
@@ -113,7 +155,7 @@ export const PostProvider = ({ children }) => {
   };
 
   return (
-    <PostContext.Provider value={{ ...state, addPost, toggleLike, toggleRetweet }}>
+    <PostContext.Provider value={{ ...state, addPost, addQuoteTweet, toggleLike, toggleRetweet }}>
       {children}
     </PostContext.Provider>
   );

@@ -1,16 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
-  Popover,
-  PopoverContent,
-} from '@/components/ui/popover';
 import { getMentionSuggestions } from '../../utils/helpers';
 
 const MentionSuggestions = ({ 
@@ -23,7 +12,7 @@ const MentionSuggestions = ({
 }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const commandRef = useRef();
+  const listRef = useRef();
 
   // Sample users for demonstration (in real app, this would come from API)
   const defaultUsers = [
@@ -79,14 +68,14 @@ const MentionSuggestions = ({
         onClose();
         break;
     }
-  }, [isOpen, suggestions, selectedIndex, onClose]);
+  }, [isOpen, suggestions, selectedIndex, onClose, handleSelect]);
 
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, suggestions, selectedIndex, handleKeyDown]);
+  }, [isOpen, handleKeyDown]);
 
   return (
     <AnimatePresence>
@@ -104,61 +93,85 @@ const MentionSuggestions = ({
           exit={{ opacity: 0, y: -10, scale: 0.95 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
         >
-          <motion.div 
-            className="rounded-md border bg-popover text-popover-foreground shadow-md w-72"
-            layoutId="mention-dropdown"
+          <div 
+            ref={listRef}
+            style={{
+              backgroundColor: 'var(--background-primary)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--border-radius)',
+              padding: '8px',
+              maxHeight: '200px',
+              overflowY: 'auto',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
           >
-            <Command ref={commandRef}>
-              <CommandList>
-                {suggestions.length === 0 ? (
-                  <CommandEmpty>No users found.</CommandEmpty>
-                ) : (
-                  <CommandGroup>
-                    {suggestions.map((user, index) => (
-                      <motion.div
-                        key={user.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.2, delay: index * 0.05 }}
+            {suggestions.length === 0 ? (
+              <div style={{ padding: '8px', color: 'var(--text-secondary)' }}>
+                No users found.
+              </div>
+            ) : (
+              suggestions.map((user, index) => (
+                <motion.div
+                  key={user.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                >
+                  <div
+                    onClick={() => handleSelect(user)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px',
+                      borderRadius: 'var(--border-radius)',
+                      cursor: 'pointer',
+                      backgroundColor: index === selectedIndex ? 'var(--background-hover)' : 'transparent',
+                      transition: 'var(--transition)'
+                    }}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.displayName}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%'
+                        }}
+                      />
+                    ) : (
+                      <div 
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          backgroundColor: 'var(--primary-color)',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}
                       >
-                        <CommandItem
-                          value={user.username}
-                          onSelect={() => handleSelect(user)}
-                          className={`cursor-pointer ${
-                            index === selectedIndex ? 'bg-accent text-accent-foreground' : ''
-                          }`}
-                        >
-                          <motion.div 
-                            className="flex items-center gap-3"
-                            whileHover={{ scale: 1.02 }}
-                            transition={{ duration: 0.1 }}
-                          >
-                            {user.avatar ? (
-                              <img
-                                src={user.avatar}
-                                alt={user.displayName}
-                                className="w-8 h-8 rounded-full"
-                              />
-                            ) : (
-                              <div 
-                                className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-semibold"
-                              >
-                                {user.displayName.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <div className="flex flex-col">
-                              <span className="font-medium">{user.displayName}</span>
-                              <span className="text-sm text-muted-foreground">@{user.username}</span>
-                            </div>
-                          </motion.div>
-                        </CommandItem>
-                      </motion.div>
-                    ))}
-                  </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          </motion.div>
+                        {user.displayName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: '600', fontSize: '14px' }}>
+                        {user.displayName}
+                      </div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
+                        @{user.username}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
