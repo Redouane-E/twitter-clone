@@ -1,3 +1,4 @@
 1. Add dark mode toggle to header
 2. using shadcn Add @username mentions in tweets
 3. Add trending hashtags sidebar with live counts
+4. Reply Functionality - Currently shows reply count of 0, implement actual replies to posts

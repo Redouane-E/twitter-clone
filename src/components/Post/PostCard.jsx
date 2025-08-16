@@ -5,11 +5,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { usePosts } from '../../contexts/PostContext';
 import { formatRelativeTime, renderTextWithMentions } from '../../utils/helpers';
 import QuoteTweetModal from './QuoteTweetModal';
+import ReplyModal from './ReplyModal';
+import Reply from './Reply';
 
 const PostCard = ({ post }) => {
   const { user } = useAuth();
   const { toggleLike, toggleRetweet } = usePosts();
   const [showQuoteTweetModal, setShowQuoteTweetModal] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
 
   const handleLike = () => {
     toggleLike(post.id, user.id);
@@ -23,6 +26,10 @@ const PostCard = ({ post }) => {
     // Prevent quoting quote tweets to avoid infinite chains
     if (post.quotedPost) return;
     setShowQuoteTweetModal(true);
+  };
+
+  const handleReply = () => {
+    setShowReplyModal(true);
   };
 
   const handleMentionClick = (username) => {
@@ -208,8 +215,24 @@ const PostCard = ({ post }) => {
 
           {post.quotedPost && renderEmbeddedPost(post.quotedPost)}
 
+          {post.replies && post.replies.length > 0 && (
+            <div style={{ marginTop: '12px' }}>
+              {post.replies.map((reply) => (
+                <Reply 
+                  key={reply.id} 
+                  reply={reply} 
+                  onReply={(content) => {
+                    // Handle nested reply
+                    console.log('Replying to reply:', content);
+                  }} 
+                />
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center justify-between" style={{ maxWidth: '400px' }}>
             <motion.button
+              onClick={handleReply}
               style={{
                 background: 'none',
                 border: 'none',
@@ -238,7 +261,7 @@ const PostCard = ({ post }) => {
               }}
             >
               <MessageCircle size={18} />
-              <span className="text-small">0</span>
+              <span className="text-small">{post.replyCount || 0}</span>
             </motion.button>
 
             <motion.button
@@ -362,6 +385,12 @@ const PostCard = ({ post }) => {
       <QuoteTweetModal
         isOpen={showQuoteTweetModal}
         onClose={() => setShowQuoteTweetModal(false)}
+        originalPost={post}
+      />
+
+      <ReplyModal
+        isOpen={showReplyModal}
+        onClose={() => setShowReplyModal(false)}
         originalPost={post}
       />
     </motion.div>

@@ -26,6 +26,21 @@ const postReducer = (state, action) => {
         )]
       };
     }
+    case 'ADD_REPLY': {
+      const { reply, originalPostId } = action.payload;
+      return {
+        ...state,
+        posts: state.posts.map(post =>
+          post.id === originalPostId
+            ? { 
+                ...post, 
+                replies: [...(post.replies || []), reply],
+                replyCount: (post.replyCount || 0) + 1
+              }
+            : post
+        )
+      };
+    }
     case 'TOGGLE_LIKE':
       return {
         ...state,
@@ -87,6 +102,7 @@ export const PostProvider = ({ children }) => {
       likes: 0,
       retweets: 0,
       quotes: 0,
+      replyCount: 0,
       liked: false,
       retweeted: false
     };
@@ -106,6 +122,7 @@ export const PostProvider = ({ children }) => {
       likes: 0,
       retweets: 0,
       quotes: 0,
+      replyCount: 0,
       liked: false,
       retweeted: false,
       author: {
@@ -123,6 +140,39 @@ export const PostProvider = ({ children }) => {
         ? { ...post, quotes: (post.quotes || 0) + 1 }
         : post
     )];
+    localStorage.setItem('twitterPosts', JSON.stringify(updatedPosts));
+  };
+
+  const addReply = (content, originalPost, user) => {
+    const reply = {
+      id: Date.now(),
+      content,
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      retweets: 0,
+      quotes: 0,
+      replyCount: 0,
+      liked: false,
+      retweeted: false,
+      author: {
+        id: user.id,
+        username: user.username,
+        displayName: user.displayName,
+        avatar: user.avatar
+      }
+    };
+    
+    dispatch({ type: 'ADD_REPLY', payload: { reply, originalPostId: originalPost.id } });
+    
+    const updatedPosts = state.posts.map(post =>
+      post.id === originalPost.id
+        ? { 
+            ...post, 
+            replies: [...(post.replies || []), reply],
+            replyCount: (post.replyCount || 0) + 1
+          }
+        : post
+    );
     localStorage.setItem('twitterPosts', JSON.stringify(updatedPosts));
   };
 
@@ -155,7 +205,7 @@ export const PostProvider = ({ children }) => {
   };
 
   return (
-    <PostContext.Provider value={{ ...state, addPost, addQuoteTweet, toggleLike, toggleRetweet }}>
+    <PostContext.Provider value={{ ...state, addPost, addQuoteTweet, addReply, toggleLike, toggleRetweet }}>
       {children}
     </PostContext.Provider>
   );
